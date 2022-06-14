@@ -16,6 +16,7 @@
 #include <unistd.h> 
 #include <string>
 #include <vector>
+#include <stack>
 #include <map>
 #include <iterator>
 #include <exception>

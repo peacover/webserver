@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigFile.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yer-raki <yer-raki@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 02:12:48 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/14 03:35:49 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/14 16:59:46 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,6 @@ std::pair<int, int> ConfigFile::check_server(std::vector<std::string>::iterator 
         {
             std::pair<std::string, bool> p;
             p = after_space(*it);
-            // std::cout << p.first << " | " << start << std::endl;
             if ((p.first == "{" && p.second) || (p.first == "}" && p.second))
             {
                 if (p.first == "}" && stack.top() == "{")
@@ -90,13 +89,12 @@ std::pair<int, int> ConfigFile::check_server(std::vector<std::string>::iterator 
                 else
                     stack.push(p.first);
                 last_pos = start;
-                // std::cout << "last pos : " << last_pos << std::endl;
             }
             if (p.first == "server")
             {
                 if (!stack.empty())
                     throw ParsingConfigFileException(strdup("brakets problem"));
-                start = start - (start - last_pos);
+                start = last_pos;
                 return(std::make_pair(tmp_start, start));
             }
         }
@@ -105,17 +103,36 @@ std::pair<int, int> ConfigFile::check_server(std::vector<std::string>::iterator 
     if (!stack.empty())
         throw ParsingConfigFileException(strdup("brakets problem"));
     else
+    {
+        start = last_pos;
         return(std::make_pair(tmp_start, start));
+    }
 }
 
-void ConfigFile::handling_single_server(int start, int end)
+void ConfigFile::menu_single_serv(std::string line, std::string first_word)
 {
     
+}
+
+void ConfigFile::handling_single_server(int start, int end, ServerConfig &single_serv)
+{
+    std::vector<std::string>::iterator it;
+    for (it =_file_data.begin() + start - 1; it != _file_data.begin() + end; it++)
+    {
+        std::pair<std::string, bool> p;
+        p = after_space(*it);
+        menu_single_serv(*it, after_space(*it).first);
+        std::cout << p.first << std::endl;
+        // std::cout << *it << std::endl;
+        
+    }
+    std::cout << "---------------------------------" << std::endl;
 }
 
 void ConfigFile::fill_serv_infos()
 {
     std::vector<std::string>::iterator it;
+    ServerConfig single_serv;
     std::pair<int, int> p; // start | end
     int start = 1;
     int tmp_start = start;
@@ -123,12 +140,11 @@ void ConfigFile::fill_serv_infos()
     {
         tmp_start = start;
         p = check_server(it, start);
-        std::cout << p.first << " | " << p.second << std::endl;
-        // handling_single_server(p.first, p.second - 1); // use array of string
+        handling_single_server(p.first, p.second - 1, single_serv); // use array of string
+        _servers.push_back(single_serv);
         it += (start - tmp_start);
         start++;
-        if (start >= _file_data.size())
-            return;
+        single_serv.clear();
     }
 }
 
