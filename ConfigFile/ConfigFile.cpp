@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigFile.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yer-raki <yer-raki@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 02:12:48 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/14 16:59:46 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/15 07:16:02 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ ConfigFile::ConfigFile()
 ConfigFile::ConfigFile(std::string path)
 {
     _servers.clear();
-    _single_serv_infos.clear();
     _file_data.clear();
     menu(path);
 }
@@ -29,7 +28,7 @@ ConfigFile::~ConfigFile()
 {
     
 }
-std::pair<std::string, bool> ConfigFile::after_space(std::string str) // first string after space | true if eof or end of line
+std::pair<std::string, bool> after_space(std::string str) // first string after space | true if eof or end of line
 {
     std::string s;
     for(int i = 0; i < str.length(); i++)
@@ -109,42 +108,177 @@ std::pair<int, int> ConfigFile::check_server(std::vector<std::string>::iterator 
     }
 }
 
-void ConfigFile::menu_single_serv(std::string line, std::string first_word)
+std::string delete_first_word(std::string line, std::string first_word)
 {
+    int n = line.find(first_word);
+    if (n != std::string::npos)
+        return (line.erase(n, first_word.length()));
+    return (NULL);
+}
+
+std::pair<std::string, int> handling_listen(std::string first_word)
+{
+    std::pair<std::string, int> p;
+    std::string tmp = "";
+    std::string tmp1 = "";
+    bool b = false;
     
+    for (int i = 0; i < first_word.size(); i++)
+    {
+        if (first_word[i] != ':')
+            tmp += first_word[i];
+        else
+        {
+            p.first = tmp;
+            i++;
+            b = true;   
+        }
+        if (b)
+            tmp1 += first_word[i];
+    }
+    p.second = std::stoi(tmp1);
+    return (p);
+}
+
+std::pair<int, std::string> handling_error_page(std::string line)
+{
+    std::pair<int, std::string> ret;
+    std::pair<std::string, bool> p = after_space(line);
+    
+    line = delete_first_word(line, p.first);
+    p = after_space(line);
+    ret.first = stoi(p.first);
+    line = delete_first_word(line, p.first);
+    p = after_space(line);
+    ret.second = p.first;
+    return (ret);
+}
+
+std::pair<int, std::string> handling_redirection(std::string line)
+{
+    std::pair<int, std::string> ret;
+    std::pair<std::string, bool> p = after_space(line);
+    
+    line = delete_first_word(line, p.first);
+    p = after_space(line);
+    ret.first = stoi(p.first);
+    line = delete_first_word(line, p.first);
+    p = after_space(line);
+    ret.second = p.first;
+    return (ret);
+}
+
+std::vector<std::string> handling_allow_methods(std::string line)
+{
+    std::vector<std::string> v;
+    std::pair<std::string, bool> p = after_space(line);
+    std::string tmp;
+    line = delete_first_word(line, p.first);
+    while (p.second == false)
+    {   
+        p = after_space(line);
+        line = delete_first_word(line, p.first);
+        v.push_back(p.first);
+    }
+    return v;
+}
+
+std::pair<std::string, std::string> handling_cgi(std::vector<std::string>::iterator &it_line) // extention | path
+{
+    std::pair<std::string, std::string> ret;
+    std::string line = *it_line;
+    std::pair<std::string, bool> p = after_space(line);
+    line = delete_first_word(line, p.first);
+    p = after_space(line);
+    ret.first = p.first;
+    it_line += 2;
+    line = *it_line;
+    p = after_space(line);
+    line = delete_first_word(line, p.first);
+    p = after_space(line);
+    ret.second = p.first;
+    it_line++;
+    // std::cout << ret.first << " | " << ret.second << std::endl;
+    // std::cout << "------------------------" << std::endl;
+    return (ret);
+}
+
+void ConfigFile::menu_single_serv(std::vector<std::string>::iterator &it_line, std::string first_word, ServerConfig &single_serv)
+{
+    std::string str;
+    str = delete_first_word(*it_line, first_word);
+    // std::pair<std::string, std::string> aaaa;
+    // std::cout << str << std::endl; 
+    if (first_word == "listen")
+    {
+        std::pair<std::string, int> p = handling_listen(after_space(str).first);
+        single_serv.setHost(p.first);
+        single_serv.setPort(p.second);
+    }
+    if (first_word == "root")
+        single_serv.setRoot(after_space(str).first);
+    if (first_word == "allow_methods")
+        single_serv.setAllowMethods(handling_allow_methods(*it_line));
+    if (first_word == "upload_path")
+        single_serv.setUploadPath(after_space(str).first);
+    if (first_word == "index")
+        single_serv.setIndex(after_space(str).first);
+    if (first_word == "error_page")
+    {
+        std::pair<int, std::string> ret = handling_error_page(*it_line);
+        if (ret.first < 400 || ret.first > 511)
+            throw ParsingConfigFileException(strdup("error_page range invalid"));
+        single_serv.setErrorPage(ret);
+    }
+    if (first_word == "autoindex")
+        (after_space(str).first == "true") ? single_serv.setAutoIndex(true) : single_serv.setAutoIndex(false);
+    if (first_word == "return")
+        single_serv.setRedirection(handling_redirection(*it_line));
+    // if (first_word == "location")
+    //     handling_location(after_space(str).first);
+    if (first_word == "cgi")
+    {
+        single_serv.setCgi(handling_cgi(it_line));
+        // aaaa = handling_cgi(it_line);
+        // std::cout << aaaa.first << " | " << aaaa.second << std::endl;
+        // std::cout << "------------------------" << std::endl;     
+    }   
 }
 
 void ConfigFile::handling_single_server(int start, int end, ServerConfig &single_serv)
 {
     std::vector<std::string>::iterator it;
+    // std::cout << start << " | " << end << std::endl;
     for (it =_file_data.begin() + start - 1; it != _file_data.begin() + end; it++)
     {
         std::pair<std::string, bool> p;
         p = after_space(*it);
-        menu_single_serv(*it, after_space(*it).first);
-        std::cout << p.first << std::endl;
+        menu_single_serv(it, after_space(*it).first, single_serv);
+        // std::cout << p.first << std::endl;
         // std::cout << *it << std::endl;
         
     }
-    std::cout << "---------------------------------" << std::endl;
+ 
+    // std::cout << "---------------------------------" << std::endl;
 }
 
 void ConfigFile::fill_serv_infos()
 {
     std::vector<std::string>::iterator it;
-    ServerConfig single_serv;
     std::pair<int, int> p; // start | end
     int start = 1;
     int tmp_start = start;
     for (it = _file_data.begin(); it != _file_data.end(); it++)
     {
+        ServerConfig single_serv;
         tmp_start = start;
         p = check_server(it, start);
+        if (p.first >= p.second)
+            break;
         handling_single_server(p.first, p.second - 1, single_serv); // use array of string
         _servers.push_back(single_serv);
         it += (start - tmp_start);
         start++;
-        single_serv.clear();
     }
 }
 
@@ -161,4 +295,17 @@ void ConfigFile::menu(std::string path)
     else
         throw ParsingConfigFileException(strdup("File invalid!"));
     fill_serv_infos();
+    std::vector<ServerConfig>::iterator it_serv;
+    std::vector<std::pair<std::string, std::string> > cgi;
+    std::vector<std::pair<std::string, std::string> >::iterator it_cgi;
+    int i = 0;
+    for (it_serv = _servers.begin(); it_serv != _servers.end(); it_serv++)
+    {
+        cgi = it_serv->getCgi();
+        for (it_cgi = cgi.begin(); it_cgi != cgi.end(); it_cgi++)
+        {
+            std::cout << (*it_cgi).first << " | " << (*it_cgi).second << std::endl;
+        }
+        std::cout << "---------------------------" << std::endl;
+    }
 }

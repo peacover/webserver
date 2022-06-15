@@ -34,16 +34,29 @@ class ServerConfig
 		virtual ~ServerConfig();
 		
 		std::string getHost() const;
-		std::string getPort() const;
+		int getPort() const;
 		std::string getRoot() const;
 		std::vector<std::string> getAllowMethods() const;
 		std::string getUploadPath() const;
 		std::string getIndex() const;
 		std::vector<std::pair<int, std::string> > getErrorPage() const;
 		bool getAutoIndex() const;
-		std::vector<std::pair<std::string, std::string> > getRedirection() const;
+		std::pair<int, std::string> getRedirection() const;
 		std::vector<std::pair<std::string, std::string> > getCgi() const;
 		std::vector<Location> getLocation() const;
+
+		void setHost(std::string host);
+		void setPort(int port);
+		void setRoot(std::string root);
+		void setAllowMethods(std::vector<std::string> allow_methode);
+		void setUploadPath(std::string upload_path);
+		void setIndex(std::string index);
+		void setErrorPage(std::pair<int, std::string> error_page);
+		void setAutoIndex(bool auto_index);
+		void setRedirection(std::pair<int, std::string> redirection);
+		void setCgi(std::pair<std::string, std::string> cgi);
+		void setLocation(std::vector<Location> location);
+
 
 		void menu(std::string path);
 		
@@ -62,14 +75,14 @@ class ServerConfig
         };
 	private:
 		std::string	_host;
-		std::string	_port;
+		int	_port;
 		std::string	_root;
 		std::vector<std::string> _allow_methods;
 		std::string	_upload_path;
 		std::string _index;
 		std::vector<std::pair<int, std::string> > _error_page; // first : error index | second : path error
 		bool	_autoindex;
-		std::vector<std::pair<std::string, std::string> > _redirection; // first : first_path | second : second_path
+		std::pair<int, std::string> _redirection; // first : type redirection | second : path redirection
 		std::vector<std::pair<std::string, std::string> > _cgi; // first : extension | second : path 
 		std::vector<Location> _location;
 };

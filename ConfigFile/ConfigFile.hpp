@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigFile.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yer-raki <yer-raki@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 00:05:43 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/14 16:59:20 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/15 04:41:08 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,12 @@ class ConfigFile
 		virtual ~ConfigFile();
 		
 		void menu(std::string path);
-		std::pair<std::string, bool> after_space(std::string str);
 		void fill_serv_infos();
 		std::pair<int, int> check_server(std::vector<std::string>::iterator &it, int &start);
 		void handling_single_server(int start, int end, ServerConfig &single_serv);
-		void menu_single_serv(std::string line, std::string first_word);
+		void menu_single_serv(std::vector<std::string>::iterator &it_line, std::string first_word, ServerConfig &single_serv);
+
+		
 		class ParsingConfigFileException : public std::exception
         {
             public:
