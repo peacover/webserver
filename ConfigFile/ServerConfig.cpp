@@ -116,13 +116,8 @@ void ServerConfig::setRedirection(std::pair<int, std::string>  redirection)
 void ServerConfig::setCgi(std::pair<std::string, std::string> cgi)
 {
     _cgi.push_back(cgi);
-
-    // std::cout << _cgi.back().first << " | " << _cgi.back().second << std::endl;
-    // std::cout << "check02------------------------" << std::endl;     
-
-    
 }
-void ServerConfig::setLocation(std::vector<Location> location)
+void ServerConfig::setLocation(Location location)
 {
-    _location = location;
+    _location.push_back(location);
 }

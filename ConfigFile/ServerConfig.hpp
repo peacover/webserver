@@ -55,7 +55,7 @@ class ServerConfig
 		void setAutoIndex(bool auto_index);
 		void setRedirection(std::pair<int, std::string> redirection);
 		void setCgi(std::pair<std::string, std::string> cgi);
-		void setLocation(std::vector<Location> location);
+		void setLocation(Location location);
 
 
 		void menu(std::string path);

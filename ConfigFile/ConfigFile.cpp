@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 02:12:48 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/15 07:16:02 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/16 18:47:28 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,17 +198,68 @@ std::pair<std::string, std::string> handling_cgi(std::vector<std::string>::itera
     p = after_space(line);
     ret.second = p.first;
     it_line++;
-    // std::cout << ret.first << " | " << ret.second << std::endl;
-    // std::cout << "------------------------" << std::endl;
     return (ret);
+}
+
+Location ConfigFile::handling_location(std::vector<std::string>::iterator &it_line) // extention | path
+{
+    Location single_loc;
+    std::string str;
+    std::string first_word;
+    std::string line = *it_line;
+    std::pair<std::string, bool> p = after_space(line);
+    line = delete_first_word(line, p.first);
+    p = after_space(line);
+    single_loc.setPath(p.first);
+    it_line += 2;
+    while (1)
+    {
+        p = after_space(*it_line);
+        if (p.first == "}")
+            return (single_loc);
+    
+        first_word = after_space(*it_line).first;
+        str = delete_first_word(*it_line, first_word);
+        
+        if (first_word == "listen")
+        {
+            std::pair<std::string, int> p_listen = handling_listen(after_space(str).first);
+            single_loc.setHost(p_listen.first);
+            single_loc.setPort(p_listen.second);
+        }
+        if (first_word == "root")
+            single_loc.setRoot(after_space(str).first);
+        if (first_word == "allow_methods")
+            single_loc.setAllowMethods(handling_allow_methods(*it_line));
+        if (first_word == "upload_path")
+            single_loc.setUploadPath(after_space(str).first);
+        if (first_word == "index")
+            single_loc.setIndex(after_space(str).first);
+        if (first_word == "error_page")
+        {
+            std::pair<int, std::string> ret = handling_error_page(*it_line);
+            if (ret.first < 400 || ret.first > 511)
+                throw ParsingConfigFileException(strdup("error_page range invalid"));
+            single_loc.setErrorPage(ret);
+        }
+        if (first_word == "autoindex")
+            (after_space(str).first == "true") ? single_loc.setAutoIndex(true) : single_loc.setAutoIndex(false);
+        if (first_word == "return")
+            single_loc.setRedirection(handling_redirection(*it_line));
+        if (first_word == "cgi")
+            single_loc.setCgi(handling_cgi(it_line)); 
+
+        it_line++;
+    }
+    
+    return (single_loc);
 }
 
 void ConfigFile::menu_single_serv(std::vector<std::string>::iterator &it_line, std::string first_word, ServerConfig &single_serv)
 {
     std::string str;
     str = delete_first_word(*it_line, first_word);
-    // std::pair<std::string, std::string> aaaa;
-    // std::cout << str << std::endl; 
+
     if (first_word == "listen")
     {
         std::pair<std::string, int> p = handling_listen(after_space(str).first);
@@ -234,15 +285,10 @@ void ConfigFile::menu_single_serv(std::vector<std::string>::iterator &it_line, s
         (after_space(str).first == "true") ? single_serv.setAutoIndex(true) : single_serv.setAutoIndex(false);
     if (first_word == "return")
         single_serv.setRedirection(handling_redirection(*it_line));
-    // if (first_word == "location")
-    //     handling_location(after_space(str).first);
+    if (first_word == "location")
+        single_serv.setLocation(handling_location(it_line));
     if (first_word == "cgi")
-    {
-        single_serv.setCgi(handling_cgi(it_line));
-        // aaaa = handling_cgi(it_line);
-        // std::cout << aaaa.first << " | " << aaaa.second << std::endl;
-        // std::cout << "------------------------" << std::endl;     
-    }   
+        single_serv.setCgi(handling_cgi(it_line)); 
 }
 
 void ConfigFile::handling_single_server(int start, int end, ServerConfig &single_serv)
@@ -282,19 +328,8 @@ void ConfigFile::fill_serv_infos()
     }
 }
 
-void ConfigFile::menu(std::string path)
+void ConfigFile::print_infos()
 {
-    std::string line;
-    std::ifstream file(path.c_str());
-    if (file)
-    {
-        while (getline(file, line))
-            _file_data.push_back(line);
-        file.close();
-    }
-    else
-        throw ParsingConfigFileException(strdup("File invalid!"));
-    fill_serv_infos();
     std::vector<ServerConfig>::iterator it_serv;
     std::vector<std::pair<std::string, std::string> > cgi;
     std::vector<std::pair<std::string, std::string> >::iterator it_cgi;
@@ -308,4 +343,21 @@ void ConfigFile::menu(std::string path)
         }
         std::cout << "---------------------------" << std::endl;
     }
+}
+
+void ConfigFile::menu(std::string path)
+{
+    std::string line;
+    std::ifstream file(path.c_str());
+    if (file)
+    {
+        while (getline(file, line))
+            _file_data.push_back(line);
+        file.close();
+    }
+    else
+        throw ParsingConfigFileException(strdup("File invalid!"));
+    fill_serv_infos();
+    print_infos();
+
 }
