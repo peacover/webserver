@@ -14,7 +14,7 @@
 
 ServerConfig::ServerConfig()
 {
-    _host.clear();
+    // _host.clear();
     _root.clear();
     _allow_methods.clear();
     _upload_path.clear();
@@ -30,15 +30,19 @@ ServerConfig::~ServerConfig()
     
 }
 
+std::vector<std::pair<std::string, int> > ServerConfig::getListen() const
+{
+    return (_listen);
+}
+// std::string ServerConfig::getHost() const 
+// {
+//     return (_host);
+// }
+// int ServerConfig::getPort() const 
+// {
+//     return (_port);
+// }
 
-std::string ServerConfig::getHost() const 
-{
-    return (_host);
-}
-int ServerConfig::getPort() const 
-{
-    return (_port);
-}
 std::string ServerConfig::getRoot() const 
 {
     return (_root);
@@ -77,13 +81,25 @@ std::vector<Location> ServerConfig::getLocation() const
 }
 
 
-void ServerConfig::setHost(std::string host)
+// void ServerConfig::setHost(std::string host)
+// {
+//     _host = host;
+// }
+// void ServerConfig::setPort(int port)
+// {
+//     _port = port;
+// }
+void ServerConfig::setListen(std::pair<std::string, int> listen)
 {
-    _host = host;
-}
-void ServerConfig::setPort(int port)
-{
-    _port = port;
+    std::vector<std::pair<std::string, int> >::iterator it;
+    for (it = _listen.begin(); it != _listen.end(); it++)
+    {
+        if (listen.first == (*it).first && listen.second == (*it).second)
+            return;
+    }
+    _listen.push_back(listen);
+    std::cout << listen.first << std::endl;
+    std::cout << listen.second << std::endl;
 }
 void ServerConfig::setRoot(std::string root)
 {

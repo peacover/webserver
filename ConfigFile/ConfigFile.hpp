@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 00:05:43 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/16 18:38:21 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/17 00:46:23 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class ConfigFile
 		void handling_single_server(int start, int end, ServerConfig &single_serv);
 		void menu_single_serv(std::vector<std::string>::iterator &it_line, std::string first_word, ServerConfig &single_serv);
 		Location handling_location(std::vector<std::string>::iterator &it_line);
+		void fix_duplicated_elements(ServerConfig &single_serv);
 		void print_infos();
 		
 		class ParsingConfigFileException : public std::exception

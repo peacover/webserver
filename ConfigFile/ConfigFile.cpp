@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 02:12:48 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/16 18:47:28 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/17 00:53:11 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,6 +129,8 @@ std::pair<std::string, int> handling_listen(std::string first_word)
             tmp += first_word[i];
         else
         {
+            if (tmp == "localhost")
+                p.first = "127.0.0.1";
             p.first = tmp;
             i++;
             b = true;   
@@ -217,10 +219,8 @@ Location ConfigFile::handling_location(std::vector<std::string>::iterator &it_li
         p = after_space(*it_line);
         if (p.first == "}")
             return (single_loc);
-    
         first_word = after_space(*it_line).first;
         str = delete_first_word(*it_line, first_word);
-        
         if (first_word == "listen")
         {
             std::pair<std::string, int> p_listen = handling_listen(after_space(str).first);
@@ -262,9 +262,9 @@ void ConfigFile::menu_single_serv(std::vector<std::string>::iterator &it_line, s
 
     if (first_word == "listen")
     {
-        std::pair<std::string, int> p = handling_listen(after_space(str).first);
-        single_serv.setHost(p.first);
-        single_serv.setPort(p.second);
+        single_serv.setListen(handling_listen(after_space(str).first));
+        // single_serv.setHost(p.first);
+        // single_serv.setPort(p.second);
     }
     if (first_word == "root")
         single_serv.setRoot(after_space(str).first);
@@ -304,10 +304,16 @@ void ConfigFile::handling_single_server(int start, int end, ServerConfig &single
         // std::cout << *it << std::endl;
         
     }
- 
+    
     // std::cout << "---------------------------------" << std::endl;
 }
+void ConfigFile::fix_duplicated_elements(ServerConfig &single_serv)
+{
+    std::vector<std::pair<std::string, int> >::iterator it1;
+    std::vector<std::pair<std::string, int> >::iterator it2;
 
+    // for (it = single_serv.)
+}
 void ConfigFile::fill_serv_infos()
 {
     std::vector<std::string>::iterator it;
@@ -322,6 +328,7 @@ void ConfigFile::fill_serv_infos()
         if (p.first >= p.second)
             break;
         handling_single_server(p.first, p.second - 1, single_serv); // use array of string
+        fix_duplicated_elements(single_serv);
         _servers.push_back(single_serv);
         it += (start - tmp_start);
         start++;

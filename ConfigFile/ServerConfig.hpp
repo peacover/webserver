@@ -18,6 +18,7 @@
 #include <vector>
 #include <stack>
 #include <map>
+#include <set>
 #include <iterator>
 #include <exception>
 #include <fstream>
@@ -33,8 +34,9 @@ class ServerConfig
 		ServerConfig();
 		virtual ~ServerConfig();
 		
-		std::string getHost() const;
-		int getPort() const;
+		// std::string getHost() const;
+		// int getPort() const;
+		std::vector<std::pair<std::string, int> > getListen() const;
 		std::string getRoot() const;
 		std::vector<std::string> getAllowMethods() const;
 		std::string getUploadPath() const;
@@ -45,8 +47,9 @@ class ServerConfig
 		std::vector<std::pair<std::string, std::string> > getCgi() const;
 		std::vector<Location> getLocation() const;
 
-		void setHost(std::string host);
-		void setPort(int port);
+		// void setHost(std::string host);
+		// void setPort(int port);
+		void setListen(std::pair<std::string, int> listen);
 		void setRoot(std::string root);
 		void setAllowMethods(std::vector<std::string> allow_methode);
 		void setUploadPath(std::string upload_path);
@@ -74,8 +77,9 @@ class ServerConfig
 				char *_str;
         };
 	private:
-		std::string	_host;
-		int	_port;
+		// std::string	_host;
+		// int	_port;
+		std::vector<std::pair<std::string, int> > _listen; // first : host | second : port
 		std::string	_root;
 		std::vector<std::string> _allow_methods;
 		std::string	_upload_path;

@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 09:04:11 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/13 00:14:07 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/17 00:04:06 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,6 +99,7 @@ int    Socket::accept_socket()
 void    Socket::handling_socket()
 {
 	int rs;
+	long ret_read;
 	int max_fd = 0;
 	int tmp_fd  = 0;
 	fd_set read_set, write_set;
@@ -155,7 +156,7 @@ void    Socket::handling_socket()
 					// std::cout << " fd : " << i << " | val : " << _server_socket_fd << std::endl;
 					if (FD_ISSET(i, &tmp_read_set))
 					{
-							// std::cout << "in" << std::endl;
+						// std::cout << "in" << std::endl;
 						// check list of accepted sockets
 						// if !null handle sockets (recv and send fd from fd_master) | dont forget keep_alive cases !
 						// std::cout << "fd_client : " << fd_client << std::endl;
@@ -163,6 +164,10 @@ void    Socket::handling_socket()
 						{
 							// printf("master socket\n");
 							fd_client = accept_socket();
+							// char bufff[30000];
+							// ret_read = read(fd_client, bufff, 30000);
+							// std::cout << bufff << std::endl;
+							// printf("%s\n", bufff);
 							FD_SET(fd_client, &read_set);
 							// std::cout << "fd_client : " << fd_client << std::endl;
 							if (fd_client > max_fd)
