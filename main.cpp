@@ -6,11 +6,13 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/24 22:36:44 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/11 03:19:52 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/18 11:47:38 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "socket.hpp"
+#include "Request/Request.cpp"
+#include "Request/Request.hpp"
 
 int main()
 {

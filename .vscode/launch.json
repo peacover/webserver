@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "/Users/yer-raki/Desktop/webserver/ConfigFile/a.out",
+            "program": "/Users/yer-raki/Desktop/webserver/a.out",
             "args": [],
             "cwd": "${workspaceFolder}"
         }

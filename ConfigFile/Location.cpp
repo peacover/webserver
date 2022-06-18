@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/15 06:14:56 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/16 17:55:13 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/17 01:02:21 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 Location::Location()
 {
-    _host.clear();
     _root.clear();
     _allow_methods.clear();
     _upload_path.clear();
@@ -34,13 +33,9 @@ std::string Location::getPath() const
 {
     return (_path);
 }
-std::string Location::getHost() const 
+std::vector<std::pair<std::string, int> > Location::getListen() const
 {
-    return (_host);
-}
-int Location::getPort() const 
-{
-    return (_port);
+    return (_listen);
 }
 std::string Location::getRoot() const 
 {
@@ -80,13 +75,17 @@ void Location::setPath(std::string path)
 {
     _path = path;
 }
-void Location::setHost(std::string host)
+void Location::setListen(std::pair<std::string, int> listen)
 {
-    _host = host;
-}
-void Location::setPort(int port)
-{
-    _port = port;
+    std::vector<std::pair<std::string, int> >::iterator it;
+    for (it = _listen.begin(); it != _listen.end(); it++)
+    {
+        if (listen.first == (*it).first && listen.second == (*it).second)
+            return;
+    }
+    _listen.push_back(listen);
+    std::cout << listen.first << std::endl;
+    std::cout << listen.second << std::endl;
 }
 void Location::setRoot(std::string root)
 {

@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 09:04:11 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/17 00:04:06 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/18 12:05:01 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 #include <fcntl.h>
-
+#include "Request/Request.hpp"
 
 // read all requests (stored in read in select function)
 
@@ -106,7 +106,7 @@ void    Socket::handling_socket()
 	fd_set tmp_write_set, tmp_read_set;
 	int fd_client;
 	char buf[10000];
-	int ret;
+	long ret;
 	// int nb_servers;
 	// create list of master sockets (i need all ports!)
 	//// in loop 
@@ -156,45 +156,54 @@ void    Socket::handling_socket()
 					// std::cout << " fd : " << i << " | val : " << _server_socket_fd << std::endl;
 					if (FD_ISSET(i, &tmp_read_set))
 					{
-						// std::cout << "in" << std::endl;
 						// check list of accepted sockets
 						// if !null handle sockets (recv and send fd from fd_master) | dont forget keep_alive cases !
-						// std::cout << "fd_client : " << fd_client << std::endl;
 						if (i == _server_socket_fd)
 						{
-							// printf("master socket\n");
 							fd_client = accept_socket();
-							// char bufff[30000];
-							// ret_read = read(fd_client, bufff, 30000);
-							// std::cout << bufff << std::endl;
-							// printf("%s\n", bufff);
 							FD_SET(fd_client, &read_set);
-							// std::cout << "fd_client : " << fd_client << std::endl;
 							if (fd_client > max_fd)
 								max_fd = fd_client;
 						}
 						else
 						{
+							
 							// std::cout << "fd_client : " << fd_client << std::endl;
-							if ((ret = recv(fd_client, buf, sizeof(buf), 0)) <= 0)
-							{
-								std::cout << "fd_client : " << fd_client  << "ret : " << ret << std::endl;
-								if (ret == 0)
-								{
-									printf("recv success!");
-									FD_SET(fd_client, &write_set);
-									FD_CLR(fd_client, &read_set);
-									close(fd_client);
-								}
-								else
-								{
-									FD_CLR(fd_client, &read_set);
-									close(fd_client);
-									perror("ERROR : RECV ERROR!");
-        							exit(EXIT_FAILURE);
-								}
+							// std::cout << "hello" << std::endl;
+							char bufff[30000];
+							ret_read = read(fd_client, bufff, 30000);
+							Request r(bufff);
+							r.handling_request();
+							exit (EXIT_SUCCESS);
+							// std::cout << bufff << std::endl;
+							
+							// ret = recv(fd_client, buf, sizeof(buf), 0);
+							// std::cout << "fd_client : " << fd_client  << " ret : " << ret << std::endl;
+							
+							// if (ret <= 0)
+							// {
+								//std::cout << "fd_client : " << fd_client  << " ret : " << ret << std::endl;
+								// char bufff[30000];
+								// ret_read = read(fd_client, bufff, 30000);
+								// std::cout << bufff << std::endl;
+								// if (ret == 0)
+								// {
+								// 	printf("recv success!");
+								// 	// handling_request(fd);
+								// 	FD_SET(fd_client, &write_set);
+								// 	FD_CLR(fd_client, &read_set);
+								// 	close(fd_client);
+								// }
+								
 									
-							}
+							// }
+							// else
+							// {
+							// 	FD_CLR(fd_client, &read_set);
+							// 	close(fd_client);
+							// 	perror("ERROR : RECV ERROR!");
+							// 	exit(EXIT_FAILURE);
+							// }
 						}
 					}
 					else if (FD_ISSET(fd_client, &tmp_write_set))
