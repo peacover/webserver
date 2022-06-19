@@ -6,13 +6,19 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/24 22:36:44 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/18 11:47:38 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/19 17:57:18 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "socket.hpp"
 #include "Request/Request.cpp"
 #include "Request/Request.hpp"
+#include "ConfigFile/ConfigFile.hpp"
+#include "ConfigFile/ConfigFile.cpp"
+#include "ConfigFile/Location.cpp"
+#include "ConfigFile/Location.hpp"
+#include "ConfigFile/ServerConfig.cpp"
+#include "ConfigFile/ServerConfig.hpp"
 
 int main()
 {
@@ -94,8 +100,21 @@ int main()
 	// 	close(client_socket_fd);
 	// }
 
-	Socket s;
+	// Socket s;
 
-	s.handling_socket();
+	// s.handling_socket();
+
+	try
+    {
+		Socket s;
+        ConfigFile cf("./ConfigFile/servers_conf_file.conf");
+		s.handling_socket(cf);
+        // system("leaks a.out");
+    }
+    catch(const std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
+        // system("leaks a.out");
+    }
 	
 }

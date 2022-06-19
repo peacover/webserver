@@ -6,13 +6,14 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 00:05:43 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/17 00:46:23 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/19 18:11:30 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "ServerConfig.hpp"
+#include "../Request/Request.hpp"
 
 class ConfigFile
 {
@@ -30,6 +31,9 @@ class ConfigFile
 		Location handling_location(std::vector<std::string>::iterator &it_line);
 		void fix_duplicated_elements(ServerConfig &single_serv);
 		void print_infos();
+		
+		std::map<int , Request> getStoredRequest() const; // the only thing that you need in request
+		void setStoredRequest(int fd_client, Request rq);
 		
 		class ParsingConfigFileException : public std::exception
         {
@@ -51,4 +55,6 @@ class ConfigFile
 	private:
 		std::vector<ServerConfig> _servers;
 		std::vector<std::string> _file_data;
+
+		std::map<int , Request> _stored_request; // first : fd_client | second : class request of that fd_client
 };

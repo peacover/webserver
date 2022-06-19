@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 09:04:11 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/18 12:05:01 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/19 19:32:46 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 #include <sys/select.h>
 #include <fcntl.h>
 #include "Request/Request.hpp"
+#include "ConfigFile/ConfigFile.hpp"
 
 // read all requests (stored in read in select function)
 
@@ -38,7 +39,7 @@ class Socket
         
         void create_socket(); 
         int	accept_socket(); // don't forget to clear fd
-		void handling_socket();
+		void handling_socket(ConfigFile cf);
     private:
         int                 _server_socket_fd;
 };
@@ -96,7 +97,7 @@ int    Socket::accept_socket()
 	return (client_socket_fd);
 }
 
-void    Socket::handling_socket()
+void    Socket::handling_socket(ConfigFile cf)
 {
 	int rs;
 	long ret_read;
@@ -107,6 +108,7 @@ void    Socket::handling_socket()
 	int fd_client;
 	char buf[10000];
 	long ret;
+
 	// int nb_servers;
 	// create list of master sockets (i need all ports!)
 	//// in loop 
@@ -118,6 +120,7 @@ void    Socket::handling_socket()
 	//biggest file
 	max_fd = _server_socket_fd;
 	// std::cout << "server val : " << _server_socket_fd << std::endl;
+	// map<fd, REQUEST>;
 	while(1)
 	{
 		// the select function allows you to check on several different sockets or pipes
@@ -127,6 +130,12 @@ void    Socket::handling_socket()
 
 		//keep_alive : true = set to read and clear in write | false = clear in write
 		// printf("in\n");
+		struct timeval timeout;
+		{
+			timeout.tv_sec = 20;
+			timeout.tv_usec = 0;
+		};
+
 		FD_ZERO(&tmp_read_set);
 		FD_ZERO(&tmp_write_set);
 		FD_COPY(&read_set, &tmp_read_set);
@@ -136,7 +145,7 @@ void    Socket::handling_socket()
 		// select can handle around 1024 sockets in one shot
 
 		// don't forget to handle timeout!!
-		if ((rs = select(max_fd + 1, &tmp_read_set, &tmp_write_set, NULL, NULL)) < 0)
+		if ((rs = select(max_fd + 1, &tmp_read_set, &tmp_write_set, NULL, &timeout)) < 0)
 		{
 			perror("ERROR : SELECT ERROR!");
         	exit(EXIT_FAILURE);
@@ -161,6 +170,7 @@ void    Socket::handling_socket()
 						if (i == _server_socket_fd)
 						{
 							fd_client = accept_socket();
+							// map[fd_client](bufff, ret_read);
 							FD_SET(fd_client, &read_set);
 							if (fd_client > max_fd)
 								max_fd = fd_client;
@@ -172,57 +182,51 @@ void    Socket::handling_socket()
 							// std::cout << "hello" << std::endl;
 							char bufff[30000];
 							ret_read = read(fd_client, bufff, 30000);
-							Request r(bufff);
-							r.handling_request();
-							exit (EXIT_SUCCESS);
-							// std::cout << bufff << std::endl;
-							
-							// ret = recv(fd_client, buf, sizeof(buf), 0);
-							// std::cout << "fd_client : " << fd_client  << " ret : " << ret << std::endl;
-							
-							// if (ret <= 0)
+							Request r(bufff, ret_read);
+							if (cf.getStoredRequest()[fd_client].getIsFinished()){
+								std::cout << "salat l7efla  !! " << std::endl;
+								return;
+							}
+							// if (ret_read == 0)
 							// {
-								//std::cout << "fd_client : " << fd_client  << " ret : " << ret << std::endl;
-								// char bufff[30000];
-								// ret_read = read(fd_client, bufff, 30000);
-								// std::cout << bufff << std::endl;
-								// if (ret == 0)
-								// {
-								// 	printf("recv success!");
-								// 	// handling_request(fd);
-								// 	FD_SET(fd_client, &write_set);
-								// 	FD_CLR(fd_client, &read_set);
-								// 	close(fd_client);
-								// }
+								// Request r(bufff, ret_read);
+								// cf.setStoredRequest(fd_client, r);
+								// FD_SET(fd_client, &write_set);
+								// FD_CLR(fd_client, &read_set);
+							// }
+							// if (map[fd].is)
+							if (ret_read > 0)
+							{
 								
-									
-							// }
-							// else
-							// {
-							// 	FD_CLR(fd_client, &read_set);
-							// 	close(fd_client);
-							// 	perror("ERROR : RECV ERROR!");
-							// 	exit(EXIT_FAILURE);
-							// }
+								cf.setStoredRequest(fd_client, r);
+								
+							}
+							else
+							{
+								FD_CLR(fd_client, &read_set);
+								close(fd_client);
+								perror("READ PROBLEM ! ");
+								exit(EXIT_FAILURE);
+							}
 						}
 					}
-					else if (FD_ISSET(fd_client, &tmp_write_set))
-					{
-						if ((ret = send(fd_client, buf, sizeof(buf), 0)) < 0)
-						{
-							FD_CLR(fd_client, &read_set);
-							close(fd_client);
-							perror("ERROR : RECV ERROR!");
-							exit(EXIT_FAILURE);		
-						}
-						else
-						{
-							//handle keep_alive case
-							printf("send success!");
-							FD_CLR(fd_client, &write_set);
-							close(fd_client);
-						}
-					}
+					// else if (FD_ISSET(fd_client, &tmp_write_set))
+					// {
+					// 	if ((ret = send(fd_client, buf, sizeof(buf), 0)) < 0)
+					// 	{
+					// 		FD_CLR(fd_client, &read_set);
+					// 		close(fd_client);
+					// 		perror("ERROR : RECV ERROR!");
+					// 		exit(EXIT_FAILURE);		
+					// 	}
+					// 	else
+					// 	{
+					// 		//handle keep_alive case
+					// 		printf("send success!");
+					// 		FD_CLR(fd_client, &write_set);
+					// 		close(fd_client);
+					// 	}
+					// }
 				}
 			}
 		// }

@@ -6,21 +6,33 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:33:50 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/18 21:50:49 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/19 19:25:19 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 
-Request::Request(char *buf)
+Request::Request(char *buf, int ret_read)
 { 
-    _buf = std::string(buf);
-    _is_chunked = false;
-    _header.clear();
+    _buf = std::string(buf, ret_read);
+    // _is_chunked = false;
+    _ignore_header = false;
+    // _header.clear();
+}
+Request::Request()
+{
+    
 }
 Request::~Request()
 {
     
+}
+void Request::init()
+{
+    _header.clear();
+    _is_chunked = false;
+    _ignore_header = false; 
+    _is_finished = false; 
 }
 
 std::string Request::getMethod() const
@@ -43,6 +55,10 @@ std::string Request::getBody() const
 {
     return _body;
 }
+bool Request::getIsFinished() const
+{
+    return _is_finished;
+}
 
 
 void Request::setMethod(std::string method)
@@ -64,6 +80,10 @@ void Request::setHeaders(std::pair<std::string, std::string> headers)
 void Request::setBody(std::string body)
 {
     _body = body;
+}
+void Request::setIgnoreHeader(bool ignore_header)
+{
+    _ignore_header = ignore_header;
 }
 
 
@@ -104,63 +124,94 @@ void    Request::split_first_line(std::string line)
 void    Request::handling_chunks(int start)
 {
     int size = _buf.size();
+    int i;
     int tmp_start = start;
     std::string tmp;
-    for (int i = start; i < size; i++)
-    {
-        if (_buf[i] == '\r' && _buf[i + 1] == '\n')
-        {
-            tmp = _buf.substr(tmp_start, i - tmp_start);
-            // std::cout << "hhhhh : " << tmp << std::endl;
-            size = std::stoi();
-        }
-    }
+    // for (i = start; i < size; i++)
+    // {
+    //     if (_buf[i] == '\r' && _buf[i + 1] == '\n')
+    //     {
+    //         tmp = _buf.substr(tmp_start, i - tmp_start);
+    //         _chunks_length = tmp.length();
+    //         _chunk_size = std::stoi(tmp, 0, 16);
+    //         std::cout << "3afak : " << _chunk_size << std::endl;
+    //     }
+    // }
+    // start = ++i;
+    
 }
+
 void Request::handling_request()
 {
     std::string tmp;
-    int tmp_i;
     bool first_line = true;
-    int size = _buf.size();
-    for (int i = 0; i < size; i++)
+
+    std::cout << _buf << std::endl;
+   
+    int pos;
+    // bool ignore_header = false;
+    int chunk_size = 0;
+    for (int i = 0; i < _buf.size(); i++)
     {
-        if (first_line)
+        if (!_ignore_header)
         {
-            if (_buf[i] == '\r' && _buf[i + 1] == '\n')
+            pos = _buf.find("\r\n");
+            if (pos == -1)
+                break;
+            if (_buf[pos + 2] == '\r' && _buf[pos + 3] == '\n')
             {
-                std::string tmp = _buf.substr(0, i);
+                _ignore_header = true;
+                pos = pos + 4;
+                _buf = _buf.substr(pos);
+                continue;
+            }
+            tmp = _buf.substr(0, pos);
+            if (first_line)
+            {
                 split_first_line(tmp);
-                i++;
-                tmp_i = i + 1;
                 first_line = false;
             }
+            else
+                setHeaders(split_line(tmp));
+            _buf = _buf.substr(pos + 2);
         }
         else
         {
-            if (_buf[i] == '\r' && _buf[i + 1] == '\n')
+            // std::cout << "----------------------------------------------------" << std::endl;
+            // std::cout << "first char : " << _buf[0] << std::endl;
+            // std::cout << _buf << std::endl;
+            if (pos == -1)
+                return;
+            if (_is_chunked)
             {
-                tmp = _buf.substr(tmp_i, i - tmp_i);
-                setHeaders(split_line(tmp));
-                i++;
-                tmp_i = i + 1;
-                if (i + 2 < size && _buf[i + 1] == '\r' && _buf[i + 2] == '\n')// \r\n\r\n
+                pos = _buf.find("\r\n");
+                tmp = _buf.substr(0, pos);
+                if (tmp == "0\r\n")
                 {
-                    if (_is_chunked)
-                        handling_chunks(i + 3);
-                    tmp = _buf.substr(tmp_i, i - tmp_i);
-                    i++;
-                    tmp_i = i + 2;
-                    tmp = _buf.substr(tmp_i, i - tmp_i);
-                    i++;
-                    tmp_i = i + 1;
-                    _body = tmp;
-                    std::cout << "----------------------------------------------------" << std::endl;
-                    std::cout << "body : \n" << _body << std::endl;
-                    std::cout << "----------------------------------------------------" << std::endl;
-                    break;
+                    //close file
+                    std::cout << "salat l7efla !!!!!!" << std::endl;
+                    _is_finished = true;
+                    return;
                 }
+                chunk_size = std::stoi(tmp, 0, 16);
+                _buf = _buf.substr(pos + 2);
+                tmp = _buf.substr(0, chunk_size);
+                // std::cout << "first char : " << _buf[chunk_size] << " | next char : " << _buf[chunk_size + 3]  << std::endl;
+                // std::cout << "chunk : " << std::endl;
+                std::cout << tmp << std::endl;
+                return;
+                _buf = _buf.substr(chunk_size + 2);
+            }
+            else
+            {
+                pos = _buf.find("\r\n");
+                tmp = _buf.substr(0, pos);
+                _body = tmp;
+                return;
+                // std::cout << "----------------------------------------------------" << std::endl;
             }
         }
+        
     }
 
 }

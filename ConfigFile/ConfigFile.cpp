@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 02:12:48 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/17 01:03:59 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/19 19:14:27 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ ConfigFile::ConfigFile(std::string path)
 {
     _servers.clear();
     _file_data.clear();
+    _stored_request.clear();
     menu(path);
 }
 
@@ -28,6 +29,7 @@ ConfigFile::~ConfigFile()
 {
     
 }
+
 std::pair<std::string, bool> after_space(std::string str) // first string after space | true if eof or end of line
 {
     std::string s;
@@ -318,6 +320,33 @@ void ConfigFile::fill_serv_infos()
         it += (start - tmp_start);
         start++;
     }
+}
+
+std::map<int , Request> ConfigFile::getStoredRequest() const
+{
+    return _stored_request;
+}
+
+void ConfigFile::setStoredRequest(int fd_client, Request rq)
+{
+    std::map<int , Request>::iterator it;
+    std::pair<int, Request> p;
+    p.first = fd_client;
+    p.second = rq; // should add operator =
+    it = _stored_request.find(p.first);
+    if (it != _stored_request.end())
+    {
+        //continue uploading
+        rq.setIgnoreHeader(true);
+        rq.handling_request();
+    }
+    else
+    {
+        //add new request
+        rq.init();
+        rq.handling_request();
+    }
+    _stored_request.insert(p);
 }
 
 void ConfigFile::print_infos()
