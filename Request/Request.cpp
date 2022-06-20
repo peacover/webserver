@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:33:50 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/19 19:25:19 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/20 17:58:33 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,38 @@ Request::~Request()
 {
     
 }
-void Request::init()
+
+Request::Request(Request const &src)
 {
+    *this = src;
+}
+
+Request & Request::operator=(Request const & src)
+{
+    _buf = src._buf;
+    _method = src._method;
+    _path = src._path;
+    _v_protocol = src._v_protocol;
+    _header = src._header;
+    _body = src._body;
+    _is_chunked = src._is_chunked;
+    _ignore_header = src._ignore_header;
+    _is_finished = src._is_finished;
+    return (*this);
+}
+
+void Request::init(int i)
+{
+    std::string str = "./stored_files/file_" + std::to_string(i);
+    // std::cout << "name file : " << str << std::endl;
     _header.clear();
     _is_chunked = false;
     _ignore_header = false; 
-    _is_finished = false; 
+    _is_finished = false;
+    
+    _myfile.open(str);
+    // myfile << "Writing this to a file.\n";
+    // 
 }
 
 std::string Request::getMethod() const
@@ -60,7 +86,11 @@ bool Request::getIsFinished() const
     return _is_finished;
 }
 
-
+void Request::close_file()
+{
+    _myfile.close();
+    // std::cout << "closed" << std::endl;
+}
 void Request::setMethod(std::string method)
 {
     _method = method;
@@ -95,12 +125,12 @@ std::pair<std::string, std::string> Request::split_line(std::string line)
     p = line.find(": ");
     key = line.substr(0, p);
     value = line.substr(p + 2);
-    std::cout << "----------------------------------------------------" << std::endl;
-    std::cout << "key: " << key << std::endl;
-    std::cout << "value: " << value << std::endl;
+    // std::cout << "----------------------------------------------------" << std::endl;
+    // std::cout << "key: " << key << std::endl;
+    // std::cout << "value: " << value << std::endl;
     if (key == "Transfer-Encoding" && value == "chunked")
         _is_chunked = true;
-    std::cout << "----------------------------------------------------" << std::endl;
+    // std::cout << "----------------------------------------------------" << std::endl;
     return std::make_pair(key, value);
 }
 
@@ -115,11 +145,11 @@ void    Request::split_first_line(std::string line)
     line = line.substr(p + 1);
     p = line.find(" ");
     _v_protocol = line.substr(0, p);
-    std::cout << "----------------------------------------------------" << std::endl;
-    std::cout << "method: " << _method << std::endl;
-    std::cout << "path: " << _path << std::endl;
-    std::cout << "version: " << _v_protocol << std::endl;
-    std::cout << "----------------------------------------------------" << std::endl;
+    // std::cout << "----------------------------------------------------" << std::endl;
+    // std::cout << "method: " << _method << std::endl;
+    // std::cout << "path: " << _path << std::endl;
+    // std::cout << "version: " << _v_protocol << std::endl;
+    // std::cout << "----------------------------------------------------" << std::endl;
 }
 void    Request::handling_chunks(int start)
 {
@@ -146,12 +176,13 @@ void Request::handling_request()
     std::string tmp;
     bool first_line = true;
 
-    std::cout << _buf << std::endl;
+    // std::cout << _buf << std::endl;
    
     int pos;
     // bool ignore_header = false;
     int chunk_size = 0;
-    for (int i = 0; i < _buf.size(); i++)
+    int i = 0;
+    for (i = 0; i < _buf.size(); i++)
     {
         if (!_ignore_header)
         {
@@ -189,18 +220,32 @@ void Request::handling_request()
                 if (tmp == "0\r\n")
                 {
                     //close file
-                    std::cout << "salat l7efla !!!!!!" << std::endl;
+                    // std::cout << "salat l7efla !!!!!!" << std::endl;
                     _is_finished = true;
                     return;
                 }
+
+                // std::cout << "salat l7efla___ !!!!!!  " << tmp << std::endl;
                 chunk_size = std::stoi(tmp, 0, 16);
+                // std::cout << "salat l7efla !!!!!!" << std::endl;
+  
                 _buf = _buf.substr(pos + 2);
-                tmp = _buf.substr(0, chunk_size);
-                // std::cout << "first char : " << _buf[chunk_size] << " | next char : " << _buf[chunk_size + 3]  << std::endl;
+
+                if (chunk_size < _buf.size())
+                    tmp = _buf.substr(0, chunk_size);
+                else
+                    tmp = _buf;
+                    
                 // std::cout << "chunk : " << std::endl;
-                std::cout << tmp << std::endl;
-                return;
-                _buf = _buf.substr(chunk_size + 2);
+                // std::cout << tmp << std::endl;
+                _myfile << tmp;
+                if (chunk_size < _buf.size())
+                    _buf = _buf.substr(0, chunk_size + 2);
+                else
+                    return;
+                
+                // std::cout << _buf << std::endl;
+
             }
             else
             {

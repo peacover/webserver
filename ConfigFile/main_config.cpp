@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 00:37:18 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/18 11:45:15 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/20 18:02:30 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ int main()
 {
     try
     {
+        system("rm -rf ./stored_files/*");
         ConfigFile cf("./servers_conf_file.conf");
         // ConfigFile cf;
         // system("leaks a.out");

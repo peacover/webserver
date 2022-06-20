@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 09:04:11 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/19 19:32:46 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/20 18:08:25 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,11 +180,14 @@ void    Socket::handling_socket(ConfigFile cf)
 							
 							// std::cout << "fd_client : " << fd_client << std::endl;
 							// std::cout << "hello" << std::endl;
-							char bufff[30000];
-							ret_read = read(fd_client, bufff, 30000);
+							char bufff[1024];
+							ret_read = read(fd_client, bufff, 1024);
 							Request r(bufff, ret_read);
-							if (cf.getStoredRequest()[fd_client].getIsFinished()){
+							if (ret_read == 0 || cf.getStoredRequest()[fd_client].getIsFinished()){
 								std::cout << "salat l7efla  !! " << std::endl;
+								cf.getStoredRequest()[fd_client].close_file();
+								FD_SET(fd_client, &write_set);
+								FD_CLR(fd_client, &read_set);
 								return;
 							}
 							// if (ret_read == 0)
@@ -197,9 +200,7 @@ void    Socket::handling_socket(ConfigFile cf)
 							// if (map[fd].is)
 							if (ret_read > 0)
 							{
-								
-								cf.setStoredRequest(fd_client, r);
-								
+								cf.setStoredRequest(fd_client, r);	
 							}
 							else
 							{

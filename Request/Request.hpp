@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/17 02:13:01 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/19 19:25:30 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/20 16:43:18 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,14 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <fstream>
 
 class Request
 {
     public:
         Request(char *buf, int ret_read);
         Request();
+        Request(Request const &src);
         ~Request();
         std::string getMethod() const;
         std::string getPath() const;
@@ -37,9 +39,11 @@ class Request
         void setHeaders(std::pair<std::string, std::string> headers);
         void setBody(std::string body);
         void setIgnoreHeader(bool ignore_header);
-        void init();
+        void init(int i);
+        void close_file();
         // set ur (fd) respone
 
+        Request & operator=(Request const & src);
         void handling_request();
         void    split_first_line(std::string line);
         std::pair<std::string, std::string> split_line(std::string line);
@@ -55,6 +59,7 @@ class Request
         bool _is_chunked;
         bool _ignore_header;
         bool _is_finished;
+        std::ofstream _myfile;
         //fd of response
 };
 

@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 02:12:48 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/19 19:14:27 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/20 16:05:23 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -343,7 +343,7 @@ void ConfigFile::setStoredRequest(int fd_client, Request rq)
     else
     {
         //add new request
-        rq.init();
+        rq.init(fd_client);
         rq.handling_request();
     }
     _stored_request.insert(p);
