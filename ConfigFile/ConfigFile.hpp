@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 00:05:43 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/19 18:11:30 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/22 19:22:54 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ class ConfigFile
 		void print_infos();
 		
 		std::map<int , Request> getStoredRequest() const; // the only thing that you need in request
+		std::vector<ServerConfig> getServers() const;
 		void setStoredRequest(int fd_client, Request rq);
 		
 		class ParsingConfigFileException : public std::exception

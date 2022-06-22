@@ -36,7 +36,7 @@ class ServerConfig
 		
 		// std::string getHost() const;
 		// int getPort() const;
-		std::vector<std::pair<std::string, int> > getListen() const;
+		std::pair<std::string, int> getListen() const;
 		std::string getRoot() const;
 		std::vector<std::string> getAllowMethods() const;
 		std::string getUploadPath() const;
@@ -46,9 +46,11 @@ class ServerConfig
 		std::pair<int, std::string> getRedirection() const;
 		std::vector<std::pair<std::string, std::string> > getCgi() const;
 		std::vector<Location> getLocation() const;
+		int getMasterSocket() const;
 
 		// void setHost(std::string host);
 		// void setPort(int port);
+		// void setContentLenght
 		void setListen(std::pair<std::string, int> listen);
 		void setRoot(std::string root);
 		void setAllowMethods(std::vector<std::string> allow_methode);
@@ -59,6 +61,7 @@ class ServerConfig
 		void setRedirection(std::pair<int, std::string> redirection);
 		void setCgi(std::pair<std::string, std::string> cgi);
 		void setLocation(Location location);
+		void setMasterSocket(int socket_fd);
 
 
 		void menu(std::string path);
@@ -79,7 +82,7 @@ class ServerConfig
 	private:
 		// std::string	_host;
 		// int	_port;
-		std::vector<std::pair<std::string, int> > _listen; // first : host | second : port
+		std::pair<std::string, int> _listen; // first : host | second : port
 		std::string	_root;
 		std::vector<std::string> _allow_methods;
 		std::string	_upload_path;
@@ -89,4 +92,8 @@ class ServerConfig
 		std::pair<int, std::string> _redirection; // first : type redirection | second : path redirection
 		std::vector<std::pair<std::string, std::string> > _cgi; // first : extension | second : path 
 		std::vector<Location> _location;
+	public:
+		int _server_socket_fd;
+		fd_set _read_set, _write_set;
+		int _max_fd;
 };

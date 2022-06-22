@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 02:12:48 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/20 16:05:23 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/22 22:08:42 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,8 +131,8 @@ std::pair<std::string, int> handling_listen(std::string first_word)
             tmp += first_word[i];
         else
         {
-            if (tmp == "localhost")
-                p.first = "127.0.0.1";
+            // if (tmp == "localhost")
+            //     p.first = "127.0.0.1";
             p.first = tmp;
             i++;
             b = true;   
@@ -308,7 +308,9 @@ void ConfigFile::fill_serv_infos()
     std::pair<int, int> p; // start | end
     int start = 1;
     int tmp_start = start;
-    for (it = _file_data.begin(); it != _file_data.end(); it++)
+    // for (it = _file_data.begin(); it != _file_data.end(); it++)
+    it = _file_data.begin();
+    while (it != _file_data.end())
     {
         ServerConfig single_serv;
         tmp_start = start;
@@ -348,6 +350,10 @@ void ConfigFile::setStoredRequest(int fd_client, Request rq)
     }
     _stored_request.insert(p);
 }
+std::vector<ServerConfig> ConfigFile::getServers() const
+{
+    return (_servers);
+}
 
 void ConfigFile::print_infos()
 {
@@ -364,6 +370,7 @@ void ConfigFile::print_infos()
         }
         std::cout << "---------------------------" << std::endl;
     }
+    std::cout << "server size : " << _servers.size() << std::endl;
 }
 
 void ConfigFile::menu(std::string path)

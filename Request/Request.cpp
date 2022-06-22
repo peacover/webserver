@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:33:50 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/20 17:58:33 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/22 18:46:39 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,11 @@ bool Request::getIsFinished() const
 {
     return _is_finished;
 }
+std::string Request::getContentLength() const
+{
+    return _content_length;
+}
+
 
 void Request::close_file()
 {
@@ -128,6 +133,8 @@ std::pair<std::string, std::string> Request::split_line(std::string line)
     // std::cout << "----------------------------------------------------" << std::endl;
     // std::cout << "key: " << key << std::endl;
     // std::cout << "value: " << value << std::endl;
+    if (key == "Content-Length")
+        _content_length = value;
     if (key == "Transfer-Encoding" && value == "chunked")
         _is_chunked = true;
     // std::cout << "----------------------------------------------------" << std::endl;

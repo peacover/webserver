@@ -30,7 +30,7 @@ ServerConfig::~ServerConfig()
     
 }
 
-std::vector<std::pair<std::string, int> > ServerConfig::getListen() const
+std::pair<std::string, int> ServerConfig::getListen() const
 {
     return (_listen);
 }
@@ -79,6 +79,10 @@ std::vector<Location> ServerConfig::getLocation() const
 {
     return (_location);
 }
+int ServerConfig::getMasterSocket() const
+{
+    return (_server_socket_fd);
+}
 
 
 // void ServerConfig::setHost(std::string host)
@@ -91,15 +95,10 @@ std::vector<Location> ServerConfig::getLocation() const
 // }
 void ServerConfig::setListen(std::pair<std::string, int> listen)
 {
-    std::vector<std::pair<std::string, int> >::iterator it;
-    for (it = _listen.begin(); it != _listen.end(); it++)
-    {
-        if (listen.first == (*it).first && listen.second == (*it).second)
-            return;
-    }
-    _listen.push_back(listen);
-    std::cout << listen.first << std::endl;
-    std::cout << listen.second << std::endl;
+    if (listen.first == "localhost")
+        listen.first = "127.0.0.1";
+    _listen = listen;
+    std::cout << _listen.first << std::endl;
 }
 void ServerConfig::setRoot(std::string root)
 {
@@ -136,4 +135,9 @@ void ServerConfig::setCgi(std::pair<std::string, std::string> cgi)
 void ServerConfig::setLocation(Location location)
 {
     _location.push_back(location);
+}
+
+void ServerConfig::setMasterSocket(int socket_fd)
+{
+    _server_socket_fd = socket_fd;
 }

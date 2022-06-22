@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/17 02:13:01 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/20 16:43:18 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/22 18:45:28 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,9 @@ class Request
         std::map<std::string, std::string> getHeaders() const;
         std::string getBody() const;
         bool getIsFinished() const;
+        std::string getContentLength() const;
         // int getResponse() const;
+        
         
         void setMethod(std::string method);
         void setPath(std::string path);
@@ -59,6 +61,7 @@ class Request
         bool _is_chunked;
         bool _ignore_header;
         bool _is_finished;
+        std::string _content_length;
         std::ofstream _myfile;
         //fd of response
 };

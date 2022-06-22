@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 00:12:11 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/17 01:00:42 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/22 22:02:24 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class Location
 		virtual ~Location();
 		
         std::string getPath() const ;
-		std::vector<std::pair<std::string, int> > getListen() const;
+		std::pair<std::string, int> getListen() const;
 		std::string getRoot() const;
 		std::vector<std::string> getAllowMethods() const;
 		std::string getUploadPath() const;
@@ -68,7 +68,7 @@ class Location
 
         std::string _path;
 		
-		std::vector<std::pair<std::string, int> > _listen; // first : host | second : port
+		std::pair<std::string, int> _listen; // first : host | second : port
 		std::string	_root;
 		std::vector<std::string> _allow_methods;
 		std::string	_upload_path;

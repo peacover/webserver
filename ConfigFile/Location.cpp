@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/15 06:14:56 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/17 01:02:21 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/22 22:02:55 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ std::string Location::getPath() const
 {
     return (_path);
 }
-std::vector<std::pair<std::string, int> > Location::getListen() const
+std::pair<std::string, int> Location::getListen() const
 {
     return (_listen);
 }
@@ -77,15 +77,7 @@ void Location::setPath(std::string path)
 }
 void Location::setListen(std::pair<std::string, int> listen)
 {
-    std::vector<std::pair<std::string, int> >::iterator it;
-    for (it = _listen.begin(); it != _listen.end(); it++)
-    {
-        if (listen.first == (*it).first && listen.second == (*it).second)
-            return;
-    }
-    _listen.push_back(listen);
-    std::cout << listen.first << std::endl;
-    std::cout << listen.second << std::endl;
+   _listen = listen;
 }
 void Location::setRoot(std::string root)
 {
