@@ -94,6 +94,5 @@ class ServerConfig
 		std::vector<Location> _location;
 	public:
 		int _server_socket_fd;
-		fd_set _read_set, _write_set;
-		int _max_fd;
+
 };

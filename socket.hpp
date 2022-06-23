@@ -6,7 +6,7 @@
 /*   By: yer-raki <yer-raki@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 09:04:11 by yer-raki          #+#    #+#             */
-/*   Updated: 2022/06/22 23:08:37 by yer-raki         ###   ########.fr       */
+/*   Updated: 2022/06/24 00:00:16 by yer-raki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,9 @@ class Socket
         void send_response();
         
         void create_socket(ServerConfig &serv); 
-        int	accept_socket(ServerConfig serv); // don't forget to clear fd
+        int	accept_socket(int fd); // don't forget to clear fd
 		void handling_socket(ConfigFile cf);
+		int search_fd(int i, std::vector<ServerConfig> serv);
     private:
         // int                 _server_socket_fd;
 };
@@ -86,13 +87,13 @@ void    Socket::create_socket(ServerConfig &serv)
 	}
 }
 
-int    Socket::accept_socket(ServerConfig serv)
+int    Socket::accept_socket(int fd)
 {
 	int client_socket_fd;
     struct sockaddr_in client_addr;
 
     int client_addr_len = sizeof(client_addr);
-    if ((client_socket_fd = accept(serv._server_socket_fd, (struct sockaddr *)&client_addr, (socklen_t*)&client_addr_len)) < 0)
+    if ((client_socket_fd = accept(fd, (struct sockaddr *)&client_addr, (socklen_t*)&client_addr_len)) < 0)
     {
         perror("ERROR : ACCEPT ERROR!");
         exit(EXIT_FAILURE);
@@ -100,136 +101,146 @@ int    Socket::accept_socket(ServerConfig serv)
 	return (client_socket_fd);
 }
 
+int Socket::search_fd(int i, std::vector<ServerConfig> servs)
+{
+	std::vector<ServerConfig>::iterator it_serv;
+	for (it_serv = servs.begin(); it_serv != servs.end(); it_serv++)
+	{
+		// std::cout << "server_fd : " << (*it_serv)._server_socket_fd << " | looking for: " << i << std::endl;
+		if ((*it_serv)._server_socket_fd == i)
+			return (i);
+	}
+	return (-1);
+}
+
 void    Socket::handling_socket(ConfigFile cf)
 {
 	long ret_read;
 	int fd_client;
 	int rs;
-		
+	int max_fd;
+	fd_set read_set, write_set;
+	fd_set tmp_write_set, tmp_read_set;
+	
 	std::vector<ServerConfig> servs = cf.getServers();
 	std::vector<ServerConfig>::iterator it_serv;
+	FD_ZERO(&read_set);
+	FD_ZERO(&write_set);
 	for (it_serv = servs.begin(); it_serv != servs.end(); it_serv++)
 	{
 		create_socket(*it_serv);
-		FD_ZERO(&(*it_serv)._read_set);
-		FD_SET((*it_serv)._server_socket_fd, &(*it_serv)._read_set);
-		(*it_serv)._max_fd = (*it_serv)._server_socket_fd;
+		// std::cout << "master_socket_fd : " << (*it_serv)._server_socket_fd << std::endl;
+		FD_SET((*it_serv)._server_socket_fd, &read_set);
+		if ((*it_serv)._server_socket_fd > max_fd)
+			max_fd = (*it_serv)._server_socket_fd;
 	}
-		// }
-		//// end of loop
-		//biggest file
-		// std::cout << "server val : " << _server_socket_fd << std::endl;
-		// map<fd, REQUEST>;
-		while(1)
+	while(1)
+	{
+		// the select function allows you to check on several different sockets or pipes
+		// returs the total number of ready descriptors in all the sets
+		// params : size of what we want to work with (FD_SETSIZE is the max), fd ready to read, fd ready to write, have an exceptional condition pending,
+			//time to wait if it is null it specifies a maximum interval to wait
+
+		//keep_alive : true = set to read and clear in write | false = clear in write
+		
+		struct timeval timeout;
 		{
-			fd_set tmp_write_set, tmp_read_set;
-			// the select function allows you to check on several different sockets or pipes
-			// returs the total number of ready descriptors in all the sets
-			// params : size of what we want to work with (FD_SETSIZE is the max), fd ready to read, fd ready to write, have an exceptional condition pending,
-				//time to wait if it is null it specifies a maximum interval to wait
+			timeout.tv_sec = 20;
+			timeout.tv_usec = 0;
+		};
+		FD_ZERO(&tmp_read_set);
+		FD_ZERO(&tmp_write_set);
+		FD_COPY(&read_set, &tmp_read_set);
+		FD_COPY(&write_set, &tmp_write_set);
+		// tmp_read_set = read_set;
+		// tmp_write_set = write_set;
+		// select can handle around 1024 sockets in one shot
 
-			//keep_alive : true = set to read and clear in write | false = clear in write
-			for (it_serv = servs.begin(); it_serv != servs.end(); it_serv++)
+		if ((rs = select(max_fd + 1, &tmp_read_set, &tmp_write_set, NULL, &timeout)) < 0)
+		{
+			perror("ERROR : SELECT ERROR!");
+			exit(EXIT_FAILURE);
+		}
+		if (!rs)
+		{
+			printf("select time_out !!\n");
+			continue;
+		}
+		else
+		{
+			for (int i = 0; i < max_fd + 1; i++)
 			{
-				struct timeval timeout;
+				// std::cout << " fd : " << i << " | val : " << _server_socket_fd << std::endl;
+				if (FD_ISSET(i, &tmp_read_set))
 				{
-					timeout.tv_sec = 20;
-					timeout.tv_usec = 0;
-				};
-
-				FD_ZERO(&tmp_read_set);
-				FD_ZERO(&tmp_write_set);
-				// FD_COPY((*it_serv)._read_set, &tmp_read_set);
-				// FD_COPY((*it_serv)._write_set, &tmp_write_set);
-				tmp_read_set = (*it_serv)._read_set;
-				tmp_write_set = (*it_serv)._write_set;
-				// select can handle around 1024 sockets in one shot
-
-				if ((rs = select((*it_serv)._max_fd + 1, &tmp_read_set, &tmp_write_set, NULL, &timeout)) < 0)
-				{
-					perror("ERROR : SELECT ERROR!");
-					exit(EXIT_FAILURE);
-				}
-				if (!rs)
-				{
-					printf("select time_out !!\n");
-					continue;
-				}
-				else
-				{
-					// std::cout << "server val : " << _server_socket_fd << " max_val : " << max_fd << std::endl;
-					// for (int j = 0; j < nb_servers; j++)
-					// {
-						for (int i = 0; i < (*it_serv)._max_fd + 1; i++)
+					// check list of accepted sockets
+					// if !null handle sockets (recv and send fd from fd_master) | dont forget keep_alive cases !
+					int fd_master = search_fd(i, servs);
+					if (fd_master != -1)
+					{
+						// std::cout << "accepted" << std::endl;
+						fd_client = accept_socket(fd_master);
+						// map[fd_client](bufff, ret_read);
+						FD_SET(fd_client, &read_set);
+						if (fd_client > max_fd)
+							max_fd = fd_client;
+					}
+					else
+					{
+						char bufff[1024];
+						ret_read = read(fd_client, bufff, 1024);
+						Request r(bufff, ret_read);
+						if (ret_read == 0 || cf.getStoredRequest()[fd_client].getIsFinished())
 						{
-							// std::cout << " fd : " << i << " | val : " << _server_socket_fd << std::endl;
-							if (FD_ISSET(i, &tmp_read_set))
-							{
-								// check list of accepted sockets
-								// if !null handle sockets (recv and send fd from fd_master) | dont forget keep_alive cases !
-								if (i == (*it_serv)._server_socket_fd)
-								{
-									fd_client = accept_socket(*it_serv);
-									// map[fd_client](bufff, ret_read);
-									FD_SET(fd_client, &(*it_serv)._read_set);
-									if (fd_client > (*it_serv)._max_fd)
-										(*it_serv)._max_fd = fd_client;
-								}
-								else
-								{
-									char bufff[1024];
-									ret_read = read(fd_client, bufff, 1024);
-									Request r(bufff, ret_read);
-									if (ret_read == 0 || cf.getStoredRequest()[fd_client].getIsFinished()){
-										std::cout << "salat l7efla  !! " << std::endl;
-										cf.getStoredRequest()[fd_client].close_file();
-										FD_SET(fd_client, &(*it_serv)._write_set);
-										FD_CLR(fd_client, &(*it_serv)._read_set);
-										return;
-									}
-									// if (ret_read == 0)
-									// {
-										// Request r(bufff, ret_read);
-										// cf.setStoredRequest(fd_client, r);
-										// FD_SET(fd_client, &write_set);
-										// FD_CLR(fd_client, &read_set);
-									// }
-									// if (map[fd].is)
-									if (ret_read > 0)
-									{
-										std::cout << "3afak " << std::endl;
-										cf.setStoredRequest(fd_client, r);	
-									}
-									else
-									{
-										FD_CLR(fd_client, &(*it_serv)._read_set);
-										close(fd_client);
-										perror("READ PROBLEM ! ");
-										exit(EXIT_FAILURE);
-									}
-								}
-							}
-							// else if (FD_ISSET(fd_client, &tmp_write_set))
-							// {
-							// 	if ((ret = send(fd_client, buf, sizeof(buf), 0)) < 0)
-							// 	{
-							// 		FD_CLR(fd_client, &read_set);
-							// 		close(fd_client);
-							// 		perror("ERROR : RECV ERROR!");
-							// 		exit(EXIT_FAILURE);		
-							// 	}
-							// 	else
-							// 	{
-							// 		//handle keep_alive case
-							// 		printf("send success!");
-							// 		FD_CLR(fd_client, &write_set);
-							// 		close(fd_client);
-							// 	}
-							// }
+							std::cout << "close file  !! " << std::endl;
+							cf.getStoredRequest()[fd_client].close_file();
+							FD_SET(fd_client, &write_set);
+							FD_CLR(fd_client, &read_set);
+							return;
+						}
+						// if (ret_read == 0)
+						// {
+							// Request r(bufff, ret_read);
+							// cf.setStoredRequest(fd_client, r);
+							// FD_SET(fd_client, &write_set);
+							// FD_CLR(fd_client, &read_set);
+						// }
+						// if (map[fd].is)
+						if (ret_read > 0)
+						{
+							// std::cout << "3afak " << std::endl;
+							cf.setStoredRequest(fd_client, r);	
+						}
+						else
+						{
+							FD_CLR(fd_client, &read_set);
+							close(fd_client);
+							perror("READ PROBLEM ! ");
+							exit(EXIT_FAILURE);
 						}
 					}
+				}
+				// else if (FD_ISSET(fd_client, &tmp_write_set))
+				// {
+				// 	if ((ret = send(fd_client, buf, sizeof(buf), 0)) < 0)
+				// 	{
+				// 		FD_CLR(fd_client, &read_set);
+				// 		close(fd_client);
+				// 		perror("ERROR : RECV ERROR!");
+				// 		exit(EXIT_FAILURE);		
+				// 	}
+				// 	else
+				// 	{
+				// 		//handle keep_alive case
+				// 		printf("send success!");
+				// 		FD_CLR(fd_client, &write_set);
+				// 		close(fd_client);
+				// 	}
+				// }
 			}
-			}
+		}
+	}
+		
 }
 	
   
